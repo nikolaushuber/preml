@@ -70,12 +70,16 @@
 %left "*" "/" "*." "/."
 %right PREC_UNARY_MINUS 
 
-%start <Ast.t> parse 
+%start <Ast.t> parse
+%start <Ast.expr> parse_expr
 
 %%
 
 parse:
     | d = def* "eof" { d }
+
+parse_expr:
+    | e = expr "eof" { e }
 
 def: 
     | v = val_def { v }
@@ -102,7 +106,6 @@ simple_expr:
     | i = TK_INT { mk_int ~pos:$loc i }
     | f = TK_FLOAT { mk_float ~pos:$loc f }
     | v = TK_STRING { mk_var ~pos:$loc v }
-
 
 expr: 
     | e = simple_expr { e } 
