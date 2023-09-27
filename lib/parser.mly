@@ -52,7 +52,6 @@
 (* Others *)
 %token TK_LPAREN "("
 %token TK_RPAREN ")"
-%token TK_DOT "."  
 %token TK_COLON ":" 
 %token TK_COMMA "," 
 %token TK_ASSIGN "=" 
@@ -92,12 +91,18 @@ val_def:
     } 
 
 func_def: 
-    | "fun" f = simple_fun { Func f }
-    | "rec" fs = separated_nonempty_list("and", simple_fun) { RecFunc fs } 
+    | "fun" nf = simple_fun { 
+        let name, f = nf in 
+        mk_func name f  
+    }
+    | "rec" fs = separated_nonempty_list("and", simple_fun) { 
+        let names, fs = List.split fs in 
+        mk_rec_func names fs 
+    } 
 
 simple_fun: 
     | name = TK_STRING "(" nl = separated_list(",", typed_name) ")" "->" 
-        ret_ty = _type "=" body = expr { mk_func ~pos:$loc ~ty:ret_ty name nl body }
+        ret_ty = _type "=" body = expr { name, mk_func_def ~pos:$loc ~ty:ret_ty nl body }
 
 simple_expr: 
     | "(" e = expr ")" { e }
@@ -152,8 +157,7 @@ expr:
     | ">=" { Geq }
 
 ident: 
-    | id = TK_STRING { Ident.mk id } 
-    | package = TK_STRING "." id = TK_STRING { Ident.mk ~package id }
+    | id = TK_STRING { id } 
 
 typed_name: 
     | name = TK_STRING { name, Type.TVar (ref None) } 

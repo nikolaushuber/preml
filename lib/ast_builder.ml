@@ -19,5 +19,10 @@ let mk_app ?(pos = dummy_pos) func args = App { pos; func; args }
 let mk_expr ?(pos = dummy_pos) ?(ty = TVar (ref None)) name body = 
   Expr { name; body; pos; ty }
 
-let mk_func ?(pos = dummy_pos) ?(ty = TVar (ref None)) name inputs body = 
-  { name; inputs; ret_ty = ty; body; pos }
+let mk_func_def ?(pos = dummy_pos) ?(ty = TVar (ref None)) inputs body = 
+  { inputs; ret_ty = ty; body; pos }
+
+let mk_func name def = Func (name, def) 
+
+let mk_rec_func names defs = 
+  RecFunc (List.map2 (fun name def -> name, def) names defs)

@@ -72,7 +72,6 @@ rule tokenize = parse
     | ")" { TK_RPAREN }
     | "=" { TK_ASSIGN }
     | ":" { TK_COLON }
-    | "." { TK_DOT }
     | "," { TK_COMMA }
     | eof { TK_EOF } 
 
