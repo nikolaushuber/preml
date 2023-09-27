@@ -125,3 +125,13 @@ let eval_def env = function
       add_var env name value 
 
 let eval env defs = List.fold_left eval_def env defs 
+
+open Format 
+
+let fmt_value ppf = function 
+  | Unit -> pp_print_string ppf "()" 
+  | Int i -> pp_print_int ppf i 
+  | Bool b -> pp_print_bool ppf b 
+  | Float f -> pp_print_float ppf f 
+
+let string_of_value = asprintf "%a" fmt_value 
