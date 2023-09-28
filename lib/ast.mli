@@ -8,10 +8,10 @@ type expr =
   | Float of { value : float; pos : pos } 
   | UnOp of { op : unop; e : expr; pos : pos } 
   | BinOp of { op: binop; e1 : expr; e2 : expr; pos : pos }  
-  | If of { pos : pos; ty : ty; e_cond : expr; e_then : expr; e_else : expr }
+  | If of { pos : pos; mutable ty : ty; e_cond : expr; e_then : expr; e_else : expr }
   | Var of { name : string; pos : pos } 
-  | Let of { name : string; pos : pos; ty : ty; def : expr; body : expr } 
-  | App of { func : string; args : expr list; pos : pos }
+  | Let of { name : string; pos : pos; mutable ty : ty; def : expr; body : expr } 
+  | App of { func : string; args : expr list; pos : pos; mutable ty : ty }
 
 and unop = Not | Neg | FNeg 
 and binop = 
