@@ -30,10 +30,6 @@ rule tokenize = parse
     | "-" { TK_SUB }
     | "*" { TK_MUL }
     | "/" { TK_DIV }
-    | "+." { TK_FADD }
-    | "-." { TK_FSUB }
-    | "*." { TK_FMUL }
-    | "/." { TK_FDIV }
     | "==" { TK_EQ }
     | "!=" { TK_NEQ }
     | "<" { TK_LT }

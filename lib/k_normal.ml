@@ -1,4 +1,4 @@
-type id = string 
+(* type id = string 
 
 module S = Set.Make(String) 
 
@@ -80,4 +80,4 @@ let trans_func env f =
   let body', _ = trans_expr env' body in 
   inputs, ret_ty, body' 
   
-
+ *)

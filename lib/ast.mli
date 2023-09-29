@@ -6,18 +6,17 @@ type expr =
   | Bool of { value : bool; pos : pos }
   | Int of { value : int; pos : pos } 
   | Float of { value : float; pos : pos } 
-  | UnOp of { op : unop; e : expr; pos : pos } 
-  | BinOp of { op: binop; e1 : expr; e2 : expr; pos : pos }  
+  | UnOp of { op : unop; e : expr; pos : pos; mutable ty : ty } 
+  | BinOp of { op: binop; e1 : expr; e2 : expr; pos : pos; mutable ty : ty }  
   | If of { pos : pos; mutable ty : ty; e_cond : expr; e_then : expr; e_else : expr }
   | Var of { name : string; pos : pos } 
   | Let of { name : string; pos : pos; mutable ty : ty; def : expr; body : expr } 
-  | App of { func : string; args : expr list; pos : pos; mutable ty : ty }
+  | App of { func : string; args : expr list; pos : pos }
 
-and unop = Not | Neg | FNeg 
+and unop = Not | Neg 
 and binop = 
   | And | Or | Implies 
   | Add | Sub | Mul | Div | Rem 
-  | FAdd | FSub | FMul | FDiv 
   | Eq | Neq | Leq | Lt | Geq | Gt 
 
 type func = { 

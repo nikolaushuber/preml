@@ -14,10 +14,6 @@
 %token TK_SUB "-" 
 %token TK_MUL "*" 
 %token TK_DIV "/" 
-%token TK_FADD "+." 
-%token TK_FSUB "-." 
-%token TK_FMUL "*." 
-%token TK_FDIV "/." 
 %token TK_EQ "==" 
 %token TK_NEQ "!=" 
 %token TK_LT "<" 
@@ -65,8 +61,8 @@
 %left "&&" 
 %left "==" "!=" "<" "<=" ">" ">="
 %right PREC_UNARY_NOT
-%left "+" "-" "+." "-." 
-%left "*" "/" "*." "/."
+%left "+" "-" 
+%left "*" "/" 
 %right PREC_UNARY_MINUS 
 
 %start <Ast.t> parse
@@ -118,7 +114,6 @@ expr:
     (* Unary operations *)
     | "not" e = expr %prec PREC_UNARY_NOT { mk_unop ~pos:$loc Not e } 
     | "-" e = expr %prec PREC_UNARY_MINUS { mk_unop ~pos:$loc Neg e }
-    | "-." e = expr %prec PREC_UNARY_MINUS { mk_unop ~pos:$loc FNeg e }
 
     (* Binary operations *)
     | e1 = expr op = binop e2 = expr { mk_binop ~pos:$loc op e1 e2 }
@@ -145,10 +140,6 @@ expr:
     | "-" { Sub }
     | "*" { Mul }
     | "/" { Div }
-    | "+." { FAdd }
-    | "-." { FSub }
-    | "*." { FMul }
-    | "/." { FDiv }
     | "==" { Eq }
     | "!=" { Neq }
     | "<" { Lt }
@@ -160,7 +151,7 @@ ident:
     | id = TK_STRING { id } 
 
 typed_name: 
-    | name = TK_STRING { name, Type.TVar (ref None) } 
+    | name = TK_STRING { name, Type.TUnknown } 
     | name = TK_STRING ":" ty = _type { name, ty }
 
 _type: 

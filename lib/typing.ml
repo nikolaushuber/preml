@@ -2,6 +2,7 @@ open Type
 open Ast 
 
 exception UnifyError of Type.t * Type.t 
+exception TypeError 
 exception ArityError of string 
 exception NameError of string 
 
@@ -30,68 +31,65 @@ let lookup_func env name =
 
 let add_func env name func = 
   let Env { values; funcs } = env in 
-  Env { values; funcs = (name, func) :: funcs } 
+  Env { values; funcs = (name, func) :: funcs }    
 
-let rec unify t1 t2 = match t1, t2 with 
-  (* Basic types always unify with themselves *)
-  | TBool, TBool | TUnit, TUnit | TInt, TInt | TFloat, TFloat -> () 
-
-  (* If two type variables are the same *) 
-  | TVar r1, TVar r2 when r1 == r2 -> () 
-
-  (* If either t1 or t2 is an unbound type variable, try to unify it with 
-     the other type 
-  *)
-  | TVar { contents = Some t1' }, _ -> unify t1' t2
-  | _, TVar { contents = Some t2' } -> unify t1 t2' 
-
-  (* If one of the types is yet unknown, alias it with the other *)
-  | TVar ({ contents = None } as tv), ty 
-  | ty, TVar ({ contents = None } as tv) -> 
-    tv := Some ty 
-
-  (* All else are type errors *)
-  | _, _ -> raise (UnifyError (t1, t2))    
-
-let ty_of_unop = function 
-  | Not -> TBool 
-  | Neg -> TInt 
-  | FNeg -> TFloat 
-
-let ty_of_binop = function 
-  | And | Or | Implies -> TBool 
-  | Add | Sub | Mul | Div | Rem -> TInt 
-  | FAdd | FSub | FMul | FDiv -> TFloat 
-  | Eq | Neq | Leq | Lt | Geq | Gt -> TBool 
+let check_unop op ty = match op, ty with 
+  | Not, TBool -> TBool 
+  | Neg, TInt | Neg, TFloat -> ty 
+  | _ -> raise TypeError 
+  
+let check_binop op t1 t2 = match op, t1, t2 with 
+  | And, TBool, TBool 
+  | Or, TBool, TBool 
+  | Implies, TBool, TBool -> TBool 
+  | Add, TInt, TInt | Add, TFloat, TFloat 
+  | Sub, TInt, TInt | Sub, TFloat, TFloat 
+  | Mul, TInt, TInt | Mul, TFloat, TFloat 
+  | Div, TInt, TInt | Div, TFloat, TFloat 
+  | Rem, TInt, TInt -> t1
+  | Eq, TInt, TInt | Eq, TFloat, TFloat | Eq, TBool, TBool 
+  | Neq, TInt, TInt | Neq, TFloat, TFloat | Neq, TBool, TBool 
+  | Leq, TInt, TInt | Leq, TFloat, TFloat 
+  | Lt, TInt, TInt | Lt, TFloat, TFloat 
+  | Geq, TInt, TInt | Geq, TFloat, TFloat 
+  | Gt, TInt, TInt | Gt, TFloat, TFloat -> TBool 
+  | _ -> raise TypeError 
+  
 
 let rec ty_expr env = function 
   | Unit _ -> TUnit 
   | Int _ -> TInt 
   | Bool _ -> TBool 
   | Float _ -> TFloat 
-  | UnOp { op; e; _ } -> 
-     let ty = ty_of_unop op in 
-     unify ty (ty_expr env e); 
-     ty 
-  | BinOp { op; e1; e2; _ } -> 
-    let ty = ty_of_binop op in 
-    unify ty (ty_expr env e1); 
-    unify ty (ty_expr env e2); 
-    ty 
-  | If { e_cond; e_then; e_else; ty; _ } -> 
-    unify (ty_expr env e_cond) TBool; 
+  | UnOp ({ op; e; _ } as _unop) -> 
+     let ty = ty_expr env e in 
+     let ty = check_unop op ty in 
+     _unop.ty <- ty; 
+     ty
+  | BinOp ({ op; e1; e2; _ } as _binop) -> 
+    let t1 = ty_expr env e1 in 
+    let t2 = ty_expr env e2 in 
+    let t = check_binop op t1 t2 in 
+    _binop.ty <- t; 
+    t
+  | If ({ e_cond; e_then; e_else; _ } as _if) -> 
+    let t_cond = ty_expr env e_cond in 
+    if t_cond <> TBool then raise TypeError; 
     let t_then = ty_expr env e_then in 
     let t_else = ty_expr env e_else in 
-    unify t_then t_else;
-    unify ty t_then; 
+    if t_then <> t_else then raise TypeError; 
+    _if.ty <- t_then;
     t_then 
   | Var { name; _ } -> lookup_var env name 
-  | Let { name; def; body; ty; _ } -> 
-    unify ty (ty_expr env def); 
-    ty_expr (add_var env name ty) body 
-  | App { func; args; ty; _ } -> 
+  | Let ({ name; def; body; _ } as _let) -> 
+    let t_def = ty_expr env def in  
+    let _ = ty_expr (add_var env name t_def) body in 
+    _let.ty <- t_def; 
+    t_def  
+  | App { func; args; _ } -> 
     let arg_tys, ret_ty = lookup_func env func in 
     let param_tys = List.map (ty_expr env) args in 
-    List.iter2 unify arg_tys param_tys;
-    unify ty ret_ty;   
+    List.iter2 (fun t1 t2 -> 
+      if t1 <> t2 then raise TypeError
+    ) arg_tys param_tys;  
     ret_ty

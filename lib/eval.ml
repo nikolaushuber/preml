@@ -45,7 +45,7 @@ let rec eval_expr env = function
 and eval_unop op value = match op, value with 
   | Not, Bool b -> Bool (Bool.not b) 
   | Neg, Int i -> Int (- i) 
-  | FNeg, Float f -> Float (-. f) 
+  | Neg, Float f -> Float (-. f) 
   | _ -> raise TypeError 
 
 and eval_binop op val1 val2 = match op, val1, val2 with 
@@ -57,10 +57,10 @@ and eval_binop op val1 val2 = match op, val1, val2 with
   | Mul, Int i1, Int i2 -> Int (i1 * i2) 
   | Div, Int i1, Int i2 -> Int (i1 / i2) 
   | Rem, Int i1, Int i2 -> Int (Int.rem i1 i2) 
-  | FAdd, Float f1, Float f2 -> Float (f1 +. f2) 
-  | FSub, Float f1, Float f2 -> Float (f1 -. f2) 
-  | FMul, Float f1, Float f2 -> Float (f1 *. f2) 
-  | FDiv, Float f1, Float f2 -> Float (f1 /. f2) 
+  | Add, Float f1, Float f2 -> Float (f1 +. f2) 
+  | Sub, Float f1, Float f2 -> Float (f1 -. f2) 
+  | Mul, Float f1, Float f2 -> Float (f1 *. f2) 
+  | Div, Float f1, Float f2 -> Float (f1 /. f2) 
 
   (* Should probably divide this into cases *)
   | Eq, a, b -> Bool (a = b) 
