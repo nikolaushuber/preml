@@ -11,7 +11,7 @@ type expr =
   | If of { pos : pos; mutable ty : ty; e_cond : expr; e_then : expr; e_else : expr }
   | Var of { name : string; pos : pos } 
   | Let of { name : string; pos : pos; mutable ty : ty; def : expr; body : expr } 
-  | App of { func : string; args : expr list; pos : pos }
+  | App of { func : string; args : expr list; pos : pos; mutable ty : ty }
 
 and unop = Not | Neg 
 and binop = 

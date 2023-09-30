@@ -6,7 +6,7 @@ exception TypeError
 exception ArityError of string 
 exception NameError of string 
 
-type ('a, 'b) t = Env of {
+type env = Env of {
   values : (string * Type.t) list; 
   funcs : (string * (Type.t list * Type.t)) list; 
 }
@@ -93,3 +93,34 @@ let rec ty_expr env = function
       if t1 <> t2 then raise TypeError
     ) arg_tys param_tys;  
     ret_ty
+
+let extract_func_ty f = 
+  let { inputs; ret_ty; _ } = f in 
+  let _, tys = List.split inputs in 
+  tys, ret_ty 
+
+let ty_func env f = 
+  let { inputs; ret_ty; body; _ } = f in 
+  let arg_names, arg_tys = List.split inputs in 
+  let env' = List.fold_left2 add_var env arg_names arg_tys in 
+  let t = ty_expr env' body in 
+  if t <> ret_ty then raise TypeError; 
+  env' 
+
+let ty_def env = function 
+  | Func (name, f) -> 
+    let func_ty = extract_func_ty f in 
+    let env' = ty_func env f in 
+    add_func env' name func_ty 
+  | RecFunc nfs -> 
+    let names, fs = List.split nfs in 
+    let f_tys = List.map extract_func_ty fs in 
+    let env' = List.fold_left2 add_func env names f_tys in 
+    let _ = List.map (ty_func env') fs in 
+    env' 
+  | Expr { name; body; ty; _ } -> 
+    let t = ty_expr env body in 
+    if t <> ty then raise TypeError; 
+    add_var env name t
+
+let f env = List.fold_left ty_def env 

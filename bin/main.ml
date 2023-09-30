@@ -15,6 +15,7 @@ let eval_e files expr =
     let lbuf = Lexing.from_channel ic in 
     Parser.parse Lexer.tokenize lbuf 
     ) files in 
+  let _ = List.fold_left Typing.f Typing.empty_env asts in 
   let env = List.fold_left Eval.eval Eval.empty_env asts in 
   let e = Utils.expr_of_string expr in 
   let value = Eval.eval_expr env e in 

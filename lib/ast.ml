@@ -11,7 +11,7 @@ type expr =
   | If of { pos : pos; mutable ty : ty; e_cond : expr; e_then : expr; e_else : expr }
   | Var of { name : string; pos : pos } 
   | Let of { name : string; pos : pos; mutable ty : ty; def : expr; body : expr } 
-  | App of { func : string; args : expr list; pos : pos }
+  | App of { func : string; args : expr list; pos : pos; mutable ty : ty }
 
 and unop = Not | Neg 
 and binop = 
@@ -46,7 +46,7 @@ let rec sexp_of_expr = function
   | BinOp { op; e1; e2; _ } -> List [sexp_of_binop op; sexp_of_expr e1; sexp_of_expr e2] 
   | If { e_cond; e_then; e_else; _ } -> List [Atom "if"; sexp_of_expr e_cond; sexp_of_expr e_then; sexp_of_expr e_else]
   | Var { name; _ } -> Atom name 
-  | Let { name; def; body; _ } -> List [Atom "let"; Atom name; sexp_of_expr def; sexp_of_expr body] 
+  | Let { name; def; body; _ } -> List [Atom "let"; List [Atom name; sexp_of_expr def]; sexp_of_expr body] 
   | App { func; args; _ } -> List (Atom func :: List.map sexp_of_expr args) 
 
 and sexp_of_unop op = Atom (match op with 

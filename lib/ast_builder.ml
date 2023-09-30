@@ -15,7 +15,8 @@ let mk_if ?(pos = dummy_pos) ?(ty = TUnknown) e_cond e_then e_else =
 let mk_var ?(pos = dummy_pos) name = Var { pos; name } 
 let mk_let ?(pos = dummy_pos) ?(ty = TUnknown) name def body = 
   Let { pos; ty; name; def; body } 
-let mk_app ?(pos = dummy_pos)  func args = App { pos; func; args }
+let mk_app ?(pos = dummy_pos) ?(ty = TUnknown) func args = 
+  App { pos; func; args; ty }
 
 
 let mk_expr ?(pos = dummy_pos) ?(ty = TUnknown) name body = 
