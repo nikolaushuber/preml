@@ -22,13 +22,6 @@ val trans_func : Ast.func -> (string * Type.t) list * Type.t * expr
 val trans_def : Ast.def -> def
 val f : Ast.def list -> def list
 
-val sexp_of_expr : expr -> Sexplib0.Sexp.t
-val sexp_of_func :
-  string * ((string * Type.t) list * 'a * expr) -> Sexplib0.Sexp.t list
-val sexp_of_def : def -> Sexplib0.Sexp.t
-
-val indent : int ref
-
 val fmt_expr : Format.formatter -> expr -> unit
 [@@ocaml.toplevel_printer]
 

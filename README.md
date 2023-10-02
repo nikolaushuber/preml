@@ -57,6 +57,10 @@ preml eval "odd 15" --load even_odd.prml
 
 which should return `true`. 
 
+## Structure of the compiler 
+
+![](docs/compiler-structure.png)
+
 ## License 
 
 MIT

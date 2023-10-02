@@ -93,41 +93,75 @@ let trans_def = function
 
 let f = List.map trans_def 
 
-(* Conversion to S - Expression *) 
-
-open Sexplib0.Sexp 
-
-let rec sexp_of_expr = function 
-  | Unit -> Atom "()" 
-  | Bool b -> Atom (string_of_bool b) 
-  | Int i -> Atom (string_of_int i) 
-  | Float f -> Atom (string_of_float f) 
-  | UnOp (op, id) -> List [Ast.sexp_of_unop op; Atom id] 
-  | BinOp (op, id1, id2) -> List [Ast.sexp_of_binop op; Atom id1; Atom id2] 
-  | If (id, t, e) -> List [Atom id; sexp_of_expr t; sexp_of_expr e] 
-  | Var id -> Atom id 
-  | Let (n, _, e1, e2) -> List [Atom "let"; List [Atom n; sexp_of_expr e1]; sexp_of_expr e2] 
-  | App (f, args) -> List (Atom f :: List.map (fun f -> Atom f) args)
-
-let sexp_of_func f = 
-  let name, (args, _, e) = f in 
-  [
-    Atom name; 
-    List (List.map (fun (n, t) -> List [Atom n; Atom (Type.to_string t)]) args); 
-    sexp_of_expr e 
-  ]
-
-let sexp_of_def = function 
-  | Func f -> List (Atom "def-fun" :: sexp_of_func f) 
-  | RecFunc fs -> 
-    List [Atom "def-rec"; List (List.map (fun x -> List (sexp_of_func x)) fs)] 
-  | Expr (name, _, e) -> List [Atom "def-val"; Atom name; sexp_of_expr e] 
-
 (* Printing *)
-let indent = ref 2 
 
-let fmt_expr ppf t = Sexplib0.Sexp.pp_hum_indent !indent ppf (sexp_of_expr t)  
-let fmt_def ppf t = Sexplib0.Sexp.pp_hum_indent !indent ppf (sexp_of_def t) 
+open Format 
+
+let is_let = function 
+  | Let _ -> true 
+  | _ -> false 
+
+let rec fmt_expr ppf = function 
+  | Unit -> pp_print_string ppf "()" 
+  | Int i -> pp_print_int ppf i 
+  | Bool b -> pp_print_bool ppf b 
+  | Float f -> pp_print_float ppf f 
+  | UnOp (op, e) -> fprintf ppf "(%a %s)" Ast.fmt_unop op e 
+  | BinOp (op, e1, e2) -> fprintf ppf "(%s %a %s)" e1 Ast.fmt_binop op e2 
+  | If (c, t, e) -> 
+      pp_open_box ppf 0; 
+      pp_print_string ppf "if"; 
+      pp_print_space ppf (); 
+      pp_print_string ppf c; 
+      pp_print_space ppf (); 
+      pp_print_string ppf "then"; 
+      pp_print_space ppf (); 
+      pp_open_hvbox ppf 2; 
+      fmt_expr ppf t; 
+      pp_close_box ppf (); 
+      pp_print_space ppf (); 
+      pp_print_string ppf "else"; 
+      pp_print_space ppf (); 
+      pp_open_hvbox ppf 2; 
+      fmt_expr ppf e; 
+      pp_close_box ppf (); 
+      pp_close_box ppf () 
+  | Var v -> pp_print_string ppf v 
+  | App (f, args) -> 
+      fprintf ppf "(%s@ %a)" f (pp_print_list pp_print_string) args 
+  | Let (name, _, e1, e2) -> 
+      if is_let e1 then 
+        fprintf ppf "@[<v 2>let %s =@;%a@]@;in@;%a" 
+          name 
+          fmt_expr e1 
+          fmt_expr e2  
+      else
+        fprintf ppf "let %s = %a in@;%a" 
+          name 
+          fmt_expr e1 
+          fmt_expr e2 
+
+let fmt_args ppf args = 
+  let fmt_arg ppf (name, ty) = fprintf ppf "(%s : %a)" name Type.fmt ty in 
+  pp_print_list fmt_arg ppf args 
+
+let fmt_func ppf f = 
+  let name, (args, _, body) = f in 
+  fprintf ppf "@[<v 2>fun %s (%a) =@;%a@]" 
+      name 
+      fmt_args args 
+      fmt_expr body 
+
+let fmt_def ppf = function 
+  | Func f -> fmt_func ppf f
+  | RecFunc fs -> pp_print_list fmt_func ppf fs 
+  | Expr (name, _, e) -> 
+    if is_let e then 
+      fprintf ppf "@[<v 2>val %s =@;%a@]" name fmt_expr e 
+    else 
+      fprintf ppf "val %s = %a" name fmt_expr e 
+
+let dn_sep ppf () = fprintf ppf "@;@;"
+
 let fmt ppf t = 
-  let _ = List.map (fmt_def ppf) t in 
-  () 
+  fprintf ppf "@[<v 0>%a@]" (pp_print_list ~pp_sep:dn_sep fmt_def) t 

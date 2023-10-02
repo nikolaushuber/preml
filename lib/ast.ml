@@ -36,6 +36,36 @@ type t = def list
 (* Conversion to S - Expression *)
 
 open Sexplib0.Sexp 
+open Format 
+
+let fmt_unop ppf op = 
+  pp_print_string ppf (
+  match op with 
+  | Not -> "!" 
+  | Neg -> "-" 
+)
+
+let fmt_binop ppf op = pp_print_string ppf (
+  match op with 
+  | Add -> "+" 
+  | Sub -> "-" 
+  | Mul -> "*" 
+  | Div -> "/" 
+  | Rem -> "%" 
+  | And -> "&&" 
+  | Or -> "||" 
+  | Implies -> "=>" 
+  | Eq -> "=" 
+  | Neq -> "!=" 
+  | Leq -> "<=" 
+  | Lt -> "<" 
+  | Geq -> ">=" 
+  | Gt -> ">"
+)
+
+let sexp_of_unop op = Atom (asprintf "%a" fmt_unop op)
+
+let sexp_of_binop op = Atom (asprintf "%a" fmt_binop op)
 
 let rec sexp_of_expr = function 
   | Unit _ -> Atom "()" 
@@ -48,28 +78,6 @@ let rec sexp_of_expr = function
   | Var { name; _ } -> Atom name 
   | Let { name; def; body; _ } -> List [Atom "let"; List [Atom name; sexp_of_expr def]; sexp_of_expr body] 
   | App { func; args; _ } -> List (Atom func :: List.map sexp_of_expr args) 
-
-and sexp_of_unop op = Atom (match op with 
-  | Not -> "!" 
-  | Neg -> "-"
-)
-
-and sexp_of_binop op = Atom (match op with 
-  | And -> "&&"
-  | Or -> "||"
-  | Implies -> "=>"
-  | Add -> "+"
-  | Sub -> "-"
-  | Mul -> "*"
-  | Div -> "/"
-  | Rem -> "%"
-  | Eq -> "="
-  | Neq -> "!="
-  | Leq -> "<="
-  | Lt -> "<"
-  | Geq -> ">="
-  | Gt -> ">"
-)
 
 let sexp_of_func { inputs; ret_ty; body; _ } = 
   [
