@@ -1,6 +1,6 @@
 (library
  (name preml)
- (libraries sexplib0))
+ (libraries sexplib0 z3))
 
 (menhir 
  (modules parser))

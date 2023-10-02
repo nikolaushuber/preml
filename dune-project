@@ -20,7 +20,7 @@
  (name preml)
  (synopsis "A short synopsis")
  (description "A longer description")
- (depends ocaml dune menhir sexplib0 cmdliner)
+ (depends ocaml dune menhir sexplib0 cmdliner z3)
  (tags
   (topics "to describe" your project)))
 

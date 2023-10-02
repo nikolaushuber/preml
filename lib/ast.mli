@@ -45,7 +45,6 @@ val indent : int ref
 val fmt_unop : Format.formatter -> unop -> unit 
 
 val fmt_binop : Format.formatter -> binop -> unit 
-
 val fmt_expr : Format.formatter -> expr -> unit
 [@@ocaml.toplevel_printer]
 
