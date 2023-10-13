@@ -12,7 +12,7 @@ let mk_binop ?(pos = dummy_pos) ?(ty = TUnknown) op e1 e2 =
   BinOp { pos; op; e1; e2; ty } 
 let mk_if ?(pos = dummy_pos) ?(ty = TUnknown) e_cond e_then e_else = 
   If { pos; ty; e_cond; e_then; e_else }
-let mk_var ?(pos = dummy_pos) name = Var { pos; name } 
+let mk_var ?(pos = dummy_pos) ?(ty = TUnknown) name = Var { pos; name; ty } 
 let mk_let ?(pos = dummy_pos) ?(ty = TUnknown) name def body = 
   Let { pos; ty; name; def; body } 
 let mk_app ?(pos = dummy_pos) ?(ty = TUnknown) func args = 

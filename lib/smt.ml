@@ -1,5 +1,5 @@
 open Z3 
-open Inlining 
+open Substitution
 
 let trans_unop ctx op e = match op with 
   | Ast.Not -> Boolean.mk_not ctx e 
@@ -35,10 +35,10 @@ let rec trans_expr ctx = function
   | Int i -> Arithmetic.Integer.mk_numeral_i ctx i 
   | Float f -> Arithmetic.Real.mk_numeral_s ctx (string_of_float f) 
   | Bool b -> Boolean.mk_val ctx b 
-  | UnOp (op, e) -> trans_unop ctx op (trans_expr ctx e) 
-  | BinOp (op, e1, e2) -> 
+  | UnOp (_, op, e) -> trans_unop ctx op (trans_expr ctx e) 
+  | BinOp (_, op, e1, e2) -> 
     trans_binop ctx op (trans_expr ctx e1) (trans_expr ctx e2)
-  | If (c, t, e) -> 
+  | If (_, c, t, e) -> 
     Boolean.mk_ite ctx (trans_expr ctx c) (trans_expr ctx t) (trans_expr ctx e)  
-  | Var name -> Expr.mk_const_s ctx name (int_sort ctx) 
+  | Var (ty, name) -> Expr.mk_const_s ctx name (sort_of_ty ctx ty) 
   | _ -> failwith ""
