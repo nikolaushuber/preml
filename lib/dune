@@ -1,4 +1,5 @@
 (library
+ (public_name preml)
  (name preml)
  (libraries sexplib0 z3))
 
